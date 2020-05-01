@@ -20,7 +20,7 @@ namespace NuGet.Shared.Test
             var exception = Assert.Throws<ArgumentNullException>(() => XmlUtility.Load(inputUri: null));
            
             //Assert
-            Assert.Equal("filePath", exception.ParamName);
+            Assert.Equal("inputUri", exception.ParamName);
         }
 
         [Fact]
