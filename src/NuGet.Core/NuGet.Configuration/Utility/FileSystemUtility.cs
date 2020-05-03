@@ -5,11 +5,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
+using NuGet.Shared;
 
 namespace NuGet.Configuration
 {
     internal static class FileSystemUtility
     {
+        internal static XDocument GetOrCreateXmlDocument(XDocument content, string fullPath)
+        {
+            if (File.Exists(fullPath))
+            {
+                try
+                {
+                    return XmlUtility.LoadWithOutIgnoringWhiteSpaceAndComments(fullPath);
+                }
+                catch (FileNotFoundException) { }                
+            }
+
+            AddFile(fullPath, content.Save);
+            return content;
+        }
         internal static void AddFile(string fullPath, Action<Stream> writeToStream)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));

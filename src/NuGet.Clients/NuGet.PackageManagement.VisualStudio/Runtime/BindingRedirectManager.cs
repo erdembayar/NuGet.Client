@@ -8,6 +8,7 @@ using System.Linq;
 using System.Xml.Linq;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
+using NuGet.Shared;
 
 namespace NuGet.PackageManagement.VisualStudio
 {
@@ -245,7 +246,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             try
             {
-                return ProjectManagement.XmlUtility.GetOrCreateDocument(
+                return FileSystemUtility.GetOrCreateXmlDocument(
                     "configuration",
                     Path.GetDirectoryName(configFileFullPath),
                     Path.GetFileName(configFileFullPath),

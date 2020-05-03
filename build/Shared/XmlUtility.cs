@@ -13,13 +13,41 @@ namespace NuGet.Shared
         /// <summary>
         /// Creates a new System.Xml.Linq.XDocument from a file.
         /// </summary>
-        /// <param name="inputUri">A URI string that references the file to load into a new <see cref="System.Xml.Linq.XDocument"/></param>
+        /// <param name="filePath">A URI string that references the file to load into a new <see cref="System.Xml.Linq.XDocument"/></param>
         /// <returns>An <see cref="System.Xml.Linq.XDocument"/> that contains the contents of the specified file.</returns>
-        internal static XDocument Load(string inputUri)
+        internal static XDocument Load(string filePath)
         {
-            using (var reader = XmlReader.Create(inputUri, GetXmlReaderSettings()))
+            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings()))
             {
                 return XDocument.Load(reader);
+            }
+        }
+
+        internal static XDocument LoadWithOutIgnoringWhiteSpace(string filePath)
+        {
+            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings(false)))
+            {
+                return XDocument.Load(reader);
+            }
+        }
+
+        internal static XDocument LoadWithOutIgnoringWhiteSpaceAndComments(string filePath)
+        {
+            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings(false, false)))
+            {
+                return XDocument.Load(reader);
+            }
+        }
+
+        internal static string GetEncodedXMLName(string name)
+        {
+            try
+            {
+                return XmlConvert.VerifyName(name);
+            }
+            catch (XmlException)
+            {
+                return XmlConvert.EncodeLocalName(name);
             }
         }
 
@@ -39,13 +67,14 @@ namespace NuGet.Shared
         /// <summary>
         /// Creates an instance of System.Xml.XmlReaderSettings with safe settings
         /// </summary>
-        private static XmlReaderSettings GetXmlReaderSettings()
+        private static XmlReaderSettings GetXmlReaderSettings(bool ignoreWhiteSpace = true,
+            bool ignoreComments = true)
         {
             return new XmlReaderSettings()
             {
-                IgnoreWhitespace = true,
+                IgnoreWhitespace = ignoreWhiteSpace,
                 IgnoreProcessingInstructions = true,
-                IgnoreComments = true
+                IgnoreComments = ignoreComments
             };
         }
     }

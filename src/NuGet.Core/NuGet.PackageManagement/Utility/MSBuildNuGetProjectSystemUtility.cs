@@ -9,16 +9,35 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.PackageManagement;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
+using NuGet.Shared;
 
 namespace NuGet.ProjectManagement
 {
     public static class MSBuildNuGetProjectSystemUtility
     {
+        public static XDocument GetOrCreateXmlDocument(XName rootName, string path, IMSBuildProjectSystem msBuildNuGetProjectSystem)
+        {
+            if (File.Exists(Path.Combine(msBuildNuGetProjectSystem.ProjectFullPath, path)))
+            {
+                try
+                {
+                    return NuGet.Shared.XmlUtility.LoadWithOutIgnoringWhiteSpace(Path.Combine(msBuildNuGetProjectSystem.ProjectFullPath, path));
+                }
+                catch (FileNotFoundException) { }
+            }
+
+            var document = new XDocument(new XElement(rootName));
+            // Add it to the project system
+            AddFile(msBuildNuGetProjectSystem, path, document.Save);
+
+            return document;
+        }
         public static FrameworkSpecificGroup GetMostCompatibleGroup(NuGetFramework projectTargetFramework,
             IEnumerable<FrameworkSpecificGroup> itemGroups)
         {
