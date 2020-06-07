@@ -27,7 +27,7 @@ namespace NuGet.ProjectManagement
             {
                 try
                 {
-                    return NuGet.Shared.XmlUtility.LoadWithOutIgnoringWhiteSpace(Path.Combine(msBuildNuGetProjectSystem.ProjectFullPath, path));
+                    return NuGet.Shared.XmlUtility.Load(Path.Combine(msBuildNuGetProjectSystem.ProjectFullPath, path), LoadOptions.PreserveWhitespace);
                 }
                 catch (FileNotFoundException) { }
             }

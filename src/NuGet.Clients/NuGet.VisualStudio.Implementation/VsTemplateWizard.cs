@@ -245,7 +245,7 @@ namespace NuGet.VisualStudio
 
         internal virtual XDocument LoadDocument(string path)
         {
-            return XmlUtility.LoadWithOutIgnoringWhiteSpace(path);
+            return XmlUtility.Load(path, LoadOptions.PreserveWhitespace);
         }
 
         private Task ProjectFinishedGeneratingAsync(Project project)

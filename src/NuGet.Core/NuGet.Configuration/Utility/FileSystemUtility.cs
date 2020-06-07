@@ -18,7 +18,7 @@ namespace NuGet.Configuration
             {
                 try
                 {
-                    return XmlUtility.LoadWithOutIgnoringWhiteSpaceAndComments(fullPath);
+                    return XmlUtility.Load(fullPath,LoadOptions.PreserveWhitespace);
                 }
                 catch (FileNotFoundException) { }                
             }

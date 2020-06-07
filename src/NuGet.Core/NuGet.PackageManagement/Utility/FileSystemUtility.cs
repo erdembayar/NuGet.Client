@@ -24,7 +24,7 @@ namespace NuGet.ProjectManagement
             {
                 try
                 {
-                    return XmlUtility.LoadWithOutIgnoringWhiteSpace(Path.Combine(root, path));
+                    return XmlUtility.Load(Path.Combine(root, path), LoadOptions.PreserveWhitespace);
                 }
                 catch (FileNotFoundException) { }
             }

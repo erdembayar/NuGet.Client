@@ -17,23 +17,12 @@ namespace NuGet.Shared
         /// <returns>An <see cref="System.Xml.Linq.XDocument"/> that contains the contents of the specified file.</returns>
         internal static XDocument Load(string filePath)
         {
-            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings()))
-            {
-                return XDocument.Load(reader);
-            }
+            return Load(filePath, LoadOptions.None);
         }
 
-        internal static XDocument LoadWithOutIgnoringWhiteSpace(string filePath)
+        internal static XDocument Load(string filePath,LoadOptions options)
         {
-            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings(false)))
-            {
-                return XDocument.Load(reader);
-            }
-        }
-
-        internal static XDocument LoadWithOutIgnoringWhiteSpaceAndComments(string filePath)
-        {
-            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings(false, false)))
+            using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings(options)))
             {
                 return XDocument.Load(reader);
             }
@@ -58,7 +47,18 @@ namespace NuGet.Shared
         /// <returns>An <see cref="System.Xml.Linq.XDocument"/> that contains the contents of the specified stream.</returns>
         internal static XDocument Load(Stream input)
         {
-            using (var reader = XmlReader.Create(input, GetXmlReaderSettings()))
+            return Load(input, LoadOptions.None);
+        }
+
+        /// <summary>
+        /// Creates a new System.Xml.Linq.XDocument from a stream.
+        /// </summary>
+        /// <param name="input">The stream that contains the XML data.</param>
+        /// <param name="options">LoadOptions</param>
+        /// <returns>An <see cref="System.Xml.Linq.XDocument"/> that contains the contents of the specified stream.</returns>
+        internal static XDocument Load(Stream input, LoadOptions options)
+        {
+            using (var reader = XmlReader.Create(input, GetXmlReaderSettings(options)))
             {
                 return XDocument.Load(reader);
             }
@@ -67,15 +67,13 @@ namespace NuGet.Shared
         /// <summary>
         /// Creates an instance of System.Xml.XmlReaderSettings with safe settings
         /// </summary>
-        private static XmlReaderSettings GetXmlReaderSettings(bool ignoreWhiteSpace = true,
-            bool ignoreComments = true)
+        internal static XmlReaderSettings GetXmlReaderSettings(LoadOptions options)
         {
-            return new XmlReaderSettings()
-            {
-                IgnoreWhitespace = ignoreWhiteSpace,
-                IgnoreProcessingInstructions = true,
-                IgnoreComments = ignoreComments
-            };
+            XmlReaderSettings rs = new XmlReaderSettings();
+            if ((options & LoadOptions.PreserveWhitespace) == 0)
+                rs.IgnoreWhitespace = true;
+            rs.IgnoreProcessingInstructions = true;
+            return rs;
         }
     }
 }
