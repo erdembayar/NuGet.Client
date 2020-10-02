@@ -420,7 +420,7 @@ namespace NuGetVSExtension
         {
             await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var vsProject = project.ToVsHierarchy();
+            var vsProject = await project.ToVsHierarchyAsync();
             var documentName = project.FullName;
 
             // Find existing hierarchy and item id of the document window if it's
@@ -630,7 +630,7 @@ namespace NuGetVSExtension
                     &&
                     !project.IsUnloaded()
                     &&
-                    EnvDTEProjectUtility.IsSupported(project))
+                    await EnvDTEProjectUtility.IsSupportedAsync(project))
                 {
                     var windowFrame = await FindExistingWindowFrameAsync(project);
                     if (windowFrame == null)
@@ -896,7 +896,7 @@ namespace NuGetVSExtension
                 }
 
                 command.Visible = GetIsSolutionOpen() && await IsPackagesConfigBasedProjectAsync();
-                command.Enabled = !isConsoleBusy && IsSolutionExistsAndNotDebuggingAndNotBuilding() && HasActiveLoadedSupportedProject;
+                command.Enabled = !isConsoleBusy && IsSolutionExistsAndNotDebuggingAndNotBuilding() && await HasActiveLoadedSupportedProjectAsync();
             });
         }
 
@@ -921,7 +921,7 @@ namespace NuGetVSExtension
                 }
 
                 command.Visible = GetIsSolutionOpen() && IsPackagesConfigSelected();
-                command.Enabled = !isConsoleBusy && IsSolutionExistsAndNotDebuggingAndNotBuilding() && HasActiveLoadedSupportedProject;
+                command.Enabled = !isConsoleBusy && IsSolutionExistsAndNotDebuggingAndNotBuilding() && await HasActiveLoadedSupportedProjectAsync();
             });
         }
 
@@ -992,7 +992,7 @@ namespace NuGetVSExtension
                 command.Enabled =
                     IsSolutionExistsAndNotDebuggingAndNotBuilding() &&
                     !isConsoleBusy &&
-                    HasActiveLoadedSupportedProject;
+                    await HasActiveLoadedSupportedProjectAsync();
             });
         }
 
@@ -1070,14 +1070,11 @@ namespace NuGetVSExtension
         /// Gets whether the current IDE has an active, supported and non-unloaded project, which is a precondition for
         /// showing the Add Library Package Reference dialog
         /// </summary>
-        private bool HasActiveLoadedSupportedProject
+        private async Task<bool> HasActiveLoadedSupportedProjectAsync()
         {
-            get
-            {
-                var project = VsMonitorSelection.GetActiveProject();
-                return project != null && !project.IsUnloaded()
-                       && EnvDTEProjectUtility.IsSupported(project);
-            }
+            var project = VsMonitorSelection.GetActiveProject();
+            return project != null && !project.IsUnloaded()
+                   && await EnvDTEProjectUtility.IsSupportedAsync(project);
         }
 
         private bool ShouldMEFBeInitialized()

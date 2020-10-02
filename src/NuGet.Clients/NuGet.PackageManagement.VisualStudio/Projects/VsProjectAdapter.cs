@@ -34,19 +34,16 @@ namespace NuGet.PackageManagement.VisualStudio
 
         #region Properties
 
-        public string MSBuildProjectExtensionsPath
+        public async Task<string> GetMSBuildProjectExtensionsPathAsync()
         {
-            get
+            var msbuildProjectExtensionsPath = BuildProperties.GetPropertyValue(ProjectBuildProperties.MSBuildProjectExtensionsPath);
+
+            if (string.IsNullOrEmpty(msbuildProjectExtensionsPath))
             {
-                var msbuildProjectExtensionsPath = BuildProperties.GetPropertyValue(ProjectBuildProperties.MSBuildProjectExtensionsPath);
-
-                if (string.IsNullOrEmpty(msbuildProjectExtensionsPath))
-                {
-                    return null;
-                }
-
-                return Path.Combine(ProjectDirectory, msbuildProjectExtensionsPath);
+                return null;
             }
+
+            return Path.Combine(await GetProjectDirectoryAsync(), msbuildProjectExtensionsPath);
         }
 
         public string RestorePackagesPath
@@ -100,18 +97,15 @@ namespace NuGet.PackageManagement.VisualStudio
 
         public string FullName => ProjectNames.FullName;
 
-        public string ProjectDirectory
+        public async Task<string> GetProjectDirectoryAsync()
         {
-            get
+            if (!IsDeferred)
             {
-                if (!IsDeferred)
-                {
-                    return Project.GetFullPath();
-                }
-                else
-                {
-                    return Path.GetDirectoryName(FullProjectPath);
-                }
+                return await Project.GetFullPathAsync();
+            }
+            else
+            {
+                return Path.GetDirectoryName(FullProjectPath);
             }
         }
 
@@ -125,17 +119,14 @@ namespace NuGet.PackageManagement.VisualStudio
             }
         }
 
-        public bool IsSupported
+        public async Task<bool> IsSupportedAsync()
         {
-            get
+            if (!IsDeferred)
             {
-                if (!IsDeferred)
-                {
-                    return EnvDTEProjectUtility.IsSupported(Project);
-                }
-
-                return VsHierarchyUtility.IsSupported(VsHierarchy, _projectTypeGuid);
+                return await EnvDTEProjectUtility.IsSupportedAsync(Project);
             }
+
+            return await VsHierarchyUtility.IsSupportedAsync(VsHierarchy, _projectTypeGuid);
         }
 
         public string PackageTargetFallback
@@ -245,7 +236,7 @@ namespace NuGet.PackageManagement.VisualStudio
         {
             if (!IsDeferred)
             {
-                return Project.GetProjectTypeGuids();
+                return await Project.GetProjectTypeGuidsAsync();
             }
             else
             {
@@ -283,7 +274,7 @@ namespace NuGet.PackageManagement.VisualStudio
             if (!IsDeferred)
             {
                 if (Project.Kind != null
-                    && SupportedProjectTypes.IsSupportedForAddingReferences(Project.Kind))
+                    && ProjectType.IsSupportedForAddingReferences(Project.Kind))
                 {
                     return EnvDTEProjectUtility.GetReferencedProjects(Project).Select(p => p.UniqueName);
                 }
@@ -293,7 +284,7 @@ namespace NuGet.PackageManagement.VisualStudio
             else
             {
                 var projectTypeGuids = await GetProjectTypeGuidsAsync();
-                if (projectTypeGuids.All(SupportedProjectTypes.IsSupportedForAddingReferences))
+                if (projectTypeGuids.All(ProjectType.IsSupportedForAddingReferences))
                 {
                     return await _workspaceService.GetProjectReferencesAsync(FullProjectPath);
                 }
