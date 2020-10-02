@@ -161,7 +161,22 @@ namespace NuGet.PackageManagement.UI
 
         public ToolTip SourceToolTip => _sourceTooltip;
 
-        public ItemFilter Filter { get; private set; }
+        private ItemFilter _filter;
+
+        public ItemFilter Filter
+        {
+            get { return _filter; }
+            set
+            {
+                if (value != _filter)
+                {
+                    IsBrowseTab = value == ItemFilter.All;
+                }
+                _filter = value;
+            }
+        }
+
+        public bool IsBrowseTab { get; private set; }
 
         public string Title
         {

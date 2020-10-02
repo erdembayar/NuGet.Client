@@ -56,6 +56,16 @@ namespace NuGet.PackageManagement.UI
         // The count of packages that are selected
         private int _selectedCount;
 
+        public bool IsBrowseTab
+        {
+            get { return (bool)GetValue(IsBrowseTabProperty); }
+            set { SetValue(IsBrowseTabProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsBrowseTabProperty =
+            DependencyProperty.Register("IsBrowseTab", typeof(bool), typeof(InfiniteScrollList), new PropertyMetadata(default(bool)));
+
+
         public InfiniteScrollList()
             : this(new Lazy<JoinableTaskFactory>(() => NuGetUIThreadHelper.JoinableTaskFactory))
         {
@@ -689,7 +699,7 @@ namespace NuGet.PackageManagement.UI
         {
             _list.Loaded -= List_Loaded;
 
-            var c = VisualTreeHelper.GetChild(_list, 0) as Border;
+            var c = VisualTreeHelper.GetChildrenCount(_list) > 0 ? VisualTreeHelper.GetChild(_list, 0) as Border : null;
             if (c == null)
             {
                 return;

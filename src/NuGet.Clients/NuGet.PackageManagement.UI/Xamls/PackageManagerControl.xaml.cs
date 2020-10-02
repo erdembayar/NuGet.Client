@@ -1193,6 +1193,8 @@ namespace NuGet.PackageManagement.UI
         {
             if (_initialized)
             {
+                _packageList.IsBrowseTab = _topPanel.Filter == ItemFilter.All;
+
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.ResetLoadingStatusIndicator();
 
