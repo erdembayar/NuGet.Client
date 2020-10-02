@@ -51,8 +51,6 @@ namespace NuGet.PackageManagement.UI
         private readonly Guid _sessionGuid = Guid.NewGuid();
         private Stopwatch _sinceLastRefresh;
         private CancellationTokenSource _refreshCts;
-        private bool _installedTabDataIsLoaded;
-        private bool _updatesTabDataIsLoaded;
         private bool _forceRecommender;
         // used to prevent starting new search when we update the package sources
         // list in response to PackageSourcesChanged event.
@@ -386,7 +384,6 @@ namespace NuGet.PackageManagement.UI
             if (!(_loadedAndInitialized && _topPanel.Filter == ItemFilter.All))
             {
                 _loadedAndInitialized = true;
-                ResetTabDataLoadFlags();
                 SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.PackageManagerLoaded, RefreshOperationStatus.Success);
             }
@@ -483,7 +480,6 @@ namespace NuGet.PackageManagement.UI
             // search when needed by itself.
             _dontStartNewSearch = true;
             var timeSpan = GetTimeSinceLastRefreshAndRestart();
-            ResetTabDataLoadFlags();
 
             NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() => Sources_PackageSourcesChangedAsync(timeSpan))
                 .PostOnFailure(nameof(PackageManagerControl), nameof(Sources_PackageSourcesChanged));
@@ -847,7 +843,6 @@ namespace NuGet.PackageManagement.UI
             else // Invalidate cache
             {
                 Model.CachedUpdates = null;
-                FlagTabDataAsLoaded(filterToRender, isLoaded: false);
             }
 
             var packageFeeds = await GetPackageFeedsAsync(searchText, loadContext);
@@ -880,59 +875,12 @@ namespace NuGet.PackageManagement.UI
                 {
                     RefreshInstalledAndUpdatesTabs();
                 }
-
-                FlagTabDataAsLoaded(filterToRender);
-
-                // Loading Data on Installed tab should also consider the Data on Updates tab as loaded to indicate
-                // UI filtering for Updates is ready.
-                if (filterToRender == ItemFilter.Installed)
-                {
-                    FlagTabDataAsLoaded(ItemFilter.UpdatesAvailable);
-                }
             }
             catch (OperationCanceledException)
             {
                 // Invalidate cache.
                 Model.CachedUpdates = null;
-                FlagTabDataAsLoaded(filterToRender, isLoaded: false);
             }
-        }
-
-        /// <summary>
-        /// Set a flag indicating this tab has been loaded for the first time since the control was loaded.
-        /// Purpose is to identify cache availability and improve performance.
-        /// When clearing this flag by <paramref name="isLoaded"/> to false, Installed and Updates will both be cleared
-        /// since they are treated as one logical load.
-        /// </summary>
-        /// <param name="filterToCheck">Tab to mark as initially loaded. Currently supports Installed and Updates.</param>
-        /// <param name="isLoaded">Set to false to reset the tab to its original state of not loaded.</param>
-        private void FlagTabDataAsLoaded(ItemFilter filterToCheck, bool isLoaded = true)
-        {
-            switch (filterToCheck)
-            {
-                case ItemFilter.Installed:
-                    _installedTabDataIsLoaded = isLoaded;
-                    if (!isLoaded)
-                    {
-                        _updatesTabDataIsLoaded = false;
-                    }
-                    break;
-                case ItemFilter.UpdatesAvailable:
-                    _updatesTabDataIsLoaded = isLoaded;
-                    if (!isLoaded)
-                    {
-                        _installedTabDataIsLoaded = false;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private void ResetTabDataLoadFlags()
-        {
-            _installedTabDataIsLoaded = false;
-            _updatesTabDataIsLoaded = false;
         }
 
         private void RefreshInstalledAndUpdatesTabs()
@@ -1164,7 +1112,6 @@ namespace NuGet.PackageManagement.UI
         private void SourceRepoList_SelectionChanged(object sender, EventArgs e)
         {
             var timeSpan = GetTimeSinceLastRefreshAndRestart();
-            ResetTabDataLoadFlags();
 
             if (_dontStartNewSearch || !_initialized)
             {
@@ -1209,29 +1156,14 @@ namespace NuGet.PackageManagement.UI
                 oldCts?.Cancel();
                 oldCts?.Dispose();
 
-                var switchedFromInstalledOrUpdatesTab = e.PreviousFilter.HasValue &&
-                    (e.PreviousFilter == ItemFilter.Installed || e.PreviousFilter == ItemFilter.UpdatesAvailable);
-                var switchedToInstalledOrUpdatesTab = _topPanel.Filter == ItemFilter.UpdatesAvailable || _topPanel.Filter == ItemFilter.Installed;
-                var installedAndUpdatesTabDataLoaded = _installedTabDataIsLoaded && _updatesTabDataIsLoaded;
+                var isUiFiltering = _packageList.IsBrowseTab == false;
 
-                var isUiFiltering = switchedFromInstalledOrUpdatesTab && switchedToInstalledOrUpdatesTab && installedAndUpdatesTabDataLoaded;
-
-                //Installed and Updates tabs don't need to be refreshed when switching between the two, if they're both loaded.
                 if (isUiFiltering)
                 {
                     //UI can apply filtering.
-                    _packageList.FilterItems(_topPanel.Filter, _loadCts.Token);
+                    _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
                 }
-                else //Refresh tab from Cache.
-                {
-                    //If we came from a tab outside Installed/Updates, then they need to be Refreshed before UI filtering can take place.
-                    if (!switchedFromInstalledOrUpdatesTab)
-                    {
-                        ResetTabDataLoadFlags();
-                    }
 
-                    SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
-                }
                 EmitRefreshEvent(timeSpan, RefreshOperationSource.FilterSelectionChanged, RefreshOperationStatus.Success, isUiFiltering);
 
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);
@@ -1243,8 +1175,6 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         private void Refresh()
         {
-            ResetTabDataLoadFlags();
-
             if (_topPanel.Filter != ItemFilter.All)
             {
                 // refresh the whole package list
@@ -1274,7 +1204,6 @@ namespace NuGet.PackageManagement.UI
             {
                 return;
             }
-            ResetTabDataLoadFlags();
             var timeSpan = GetTimeSinceLastRefreshAndRestart();
             RegistrySettingUtility.SetBooleanSetting(
                 Constants.IncludePrereleaseRegistryName,
@@ -1305,7 +1234,6 @@ namespace NuGet.PackageManagement.UI
 
         public void ClearSearch()
         {
-            ResetTabDataLoadFlags();
             EmitRefreshEvent(GetTimeSinceLastRefreshAndRestart(), RefreshOperationSource.ClearSearch, RefreshOperationStatus.Success);
             SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: true);
         }
@@ -1464,7 +1392,6 @@ namespace NuGet.PackageManagement.UI
                 {
                     //Invalidate cache.
                     Model.CachedUpdates = null;
-                    ResetTabDataLoadFlags();
 
                     _actionCompleted?.Invoke(this, EventArgs.Empty);
                     NuGetEventTrigger.Instance.TriggerEvent(NuGetEvent.PackageOperationEnd);
@@ -1534,7 +1461,6 @@ namespace NuGet.PackageManagement.UI
         private void ExecuteRestartSearchCommand(object sender, ExecutedRoutedEventArgs e)
         {
             EmitRefreshEvent(GetTimeSinceLastRefreshAndRestart(), RefreshOperationSource.RestartSearchCommand, RefreshOperationStatus.Success);
-            ResetTabDataLoadFlags();
             SearchPackagesAndRefreshUpdateCount(useCacheForUpdates: false);
             RefreshConsolidatablePackagesCount();
         }

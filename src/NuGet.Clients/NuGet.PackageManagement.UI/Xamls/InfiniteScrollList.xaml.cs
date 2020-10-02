@@ -323,7 +323,7 @@ namespace NuGet.PackageManagement.UI
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
         }
 
-        internal void FilterItems(ItemFilter itemFilter, CancellationToken token)
+        internal void FilterInstalledDataItems(ItemFilter itemFilter, CancellationToken token)
         {
             if (!Items.Contains(_loadingStatusIndicator))
             {
