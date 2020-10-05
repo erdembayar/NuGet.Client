@@ -60,7 +60,7 @@ namespace NuGet.PackageManagement.UI.Test
         {
             var list = new InfiniteScrollList();
 
-            Assert.Same(list.DataContext, list.Items);
+            Assert.Same(list.DataContext, list.ItemsBrowse);
         }
 
         [WpfFact]
@@ -76,7 +76,7 @@ namespace NuGet.PackageManagement.UI.Test
         {
             var list = new InfiniteScrollList();
 
-            Assert.Empty(list.Items);
+            Assert.Empty(list.ItemsBrowse);
         }
 
         [WpfFact]
@@ -84,7 +84,7 @@ namespace NuGet.PackageManagement.UI.Test
         {
             var list = new InfiniteScrollList();
 
-            Assert.Empty(list.PackageItems);
+            Assert.Empty(list.PackageItemsInstalled);
         }
 
         [WpfFact]
@@ -315,7 +315,7 @@ namespace NuGet.PackageManagement.UI.Test
             list.LoadItemsCompleted += (sender, args) =>
             {
                 var lst = (InfiniteScrollList)sender;
-                tcs.TrySetResult(lst.Items.Count);
+                tcs.TrySetResult(lst.ItemsBrowse.Count);
                 _output.WriteLine("3. After assert");
             };
 

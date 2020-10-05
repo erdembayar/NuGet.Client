@@ -862,7 +862,7 @@ namespace NuGet.PackageManagement.UI
                 // start SearchAsync task for initial loading of packages
                 var searchResultTask = loader.SearchAsync(continuationToken: null, cancellationToken: _loadCts.Token);
                 // this will wait for searchResultTask to complete instead of creating a new task
-                await _packageList.LoadItemsAsync(loader, loadingMessage, _uiLogger, searchResultTask, _loadCts.Token);
+                await _packageList.LoadItemsAsync(loader, loadingMessage, _uiLogger, searchResultTask, filterToRender, _loadCts.Token);
 
                 if (pSearchCallback != null && searchTask != null)
                 {
@@ -987,7 +987,7 @@ namespace NuGet.PackageManagement.UI
         {
             var selectedPackage = _packageList.SelectedItem;
             var selectedIndex = _packageList.SelectedIndex;
-            var recommendedCount = _packageList.PackageItems.Where(item => item.Recommended == true).Count();
+            var recommendedCount = _packageList.PackageItemsInstalled.Where(item => item.Recommended == true).Count();
             if (selectedPackage == null)
             {
                 _packageDetail.Visibility = Visibility.Hidden;
@@ -1014,7 +1014,7 @@ namespace NuGet.PackageManagement.UI
         {
             var operationId = _packageList.OperationId;
             var selectedIndex = _packageList.SelectedIndex;
-            var recommendedCount = _packageList.PackageItems.Where(item => item.Recommended == true).Count();
+            var recommendedCount = _packageList.PackageItemsInstalled.Where(item => item.Recommended == true).Count();
             if (_topPanel.Filter == ItemFilter.All
                 && operationId.HasValue
                 && selectedIndex >= 0)

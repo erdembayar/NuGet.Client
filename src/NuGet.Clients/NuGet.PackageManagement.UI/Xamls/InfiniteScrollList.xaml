@@ -332,7 +332,7 @@
     </Grid>
     <nuget:InfiniteScrollListBox
       d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
-      x:Name="_list"
+      x:Name="_listBrowse"
       AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
       DockPanel.Dock="Bottom"
       PreviewKeyUp="List_PreviewKeyUp"
@@ -350,7 +350,50 @@
       SelectionChanged="List_SelectionChanged"
       Loaded="List_Loaded"
       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource BooleanToVisibilityConverter}}"
-      ItemsSource="{Binding}">
+      ItemsSource="{Binding ItemsBrowse}">
+      <!-- set the template to disable the background change when the IsEnabled is false. -->
+      <ListBox.Template>
+        <ControlTemplate
+          TargetType="{x:Type ListBox}">
+          <Border
+            x:Name="Bd"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            Background="{TemplateBinding Background}"
+            Padding="1"
+            SnapsToDevicePixels="true">
+            <ScrollViewer
+              Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
+              Focusable="false"
+              Padding="{TemplateBinding Padding}">
+              <ItemsPresenter
+                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+            </ScrollViewer>
+          </Border>
+        </ControlTemplate>
+      </ListBox.Template>
+    </nuget:InfiniteScrollListBox>
+    <nuget:InfiniteScrollListBox
+      d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
+      x:Name="_listInstalled"
+      AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
+      DockPanel.Dock="Bottom"
+      PreviewKeyUp="List_PreviewKeyUp"
+      Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
+      Foreground="{DynamicResource {x:Static nuget:Brushes.UIText}}"
+      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+      ScrollViewer.VerticalScrollBarVisibility="Visible"
+      ItemContainerStyleSelector="{DynamicResource itemStyleSelector}"
+      VirtualizingPanel.IsVirtualizing="true"
+      VirtualizingPanel.VirtualizationMode="Recycling"
+      VirtualizingPanel.CacheLength="1,2"
+      VirtualizingPanel.CacheLengthUnit="Page"
+      BorderThickness="0,0,0,0"
+      HorizontalContentAlignment="Stretch"
+      SelectionChanged="List_SelectionChanged"
+      Loaded="List_Loaded"
+      Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+      ItemsSource="{Binding ItemsInstalled}">
       <!-- set the template to disable the background change when the IsEnabled is false. -->
       <ListBox.Template>
         <ControlTemplate

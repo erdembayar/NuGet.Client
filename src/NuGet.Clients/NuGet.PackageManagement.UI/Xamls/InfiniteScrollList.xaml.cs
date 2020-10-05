@@ -82,14 +82,20 @@ namespace NuGet.PackageManagement.UI
 
             InitializeComponent();
 
-            _list.ItemsLock = ReentrantSemaphore.Create(
+            _listBrowse.ItemsLock = ReentrantSemaphore.Create(
                 initialCount: 1,
                 joinableTaskContext: _joinableTaskFactory.Value.Context,
                 mode: ReentrantSemaphore.ReentrancyMode.Stack);
 
-            BindingOperations.EnableCollectionSynchronization(Items, _list.ItemsLock);
+            _listInstalled.ItemsLock = ReentrantSemaphore.Create(
+                initialCount: 1,
+                joinableTaskContext: _joinableTaskFactory.Value.Context,
+                mode: ReentrantSemaphore.ReentrancyMode.Stack);
 
-            DataContext = Items;
+            BindingOperations.EnableCollectionSynchronization(ItemsBrowse, _listBrowse.ItemsLock);
+            BindingOperations.EnableCollectionSynchronization(ItemsInstalled, _listInstalled.ItemsLock);
+
+            DataContext = this;
             CheckBoxesEnabled = false;
 
             _loadingStatusIndicator.PropertyChanged += LoadingStatusIndicator_PropertyChanged;
@@ -112,45 +118,47 @@ namespace NuGet.PackageManagement.UI
 
         public bool IsSolution { get; set; }
 
-        public ObservableCollection<object> Items { get; } = new ObservableCollection<object>();
-        private ICollectionView CollectionView
+        public ObservableCollection<object> ItemsBrowse { get; } = new ObservableCollection<object>();
+        public ObservableCollection<object> ItemsInstalled { get; } = new ObservableCollection<object>();
+
+        private ICollectionView ItemsInstalledCollectionView
         {
             get
             {
-                return CollectionViewSource.GetDefaultView(Items);
+                return CollectionViewSource.GetDefaultView(ItemsInstalled);
             }
         }
 
         /// <summary>
         /// Count of Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
         /// </summary>
-        private int FilteredItemsCount
+        private int FilteredInstalledItemsCount
         {
             get
             {
-                return PackageItemsFiltered.Count();
+                return InstalledPackageItemsFiltered.Count();
             }
         }
 
         /// <summary>
         /// All loaded Items (excluding Loading indicator) regardless of filtering.
         /// </summary>
-        public IEnumerable<PackageItemListViewModel> PackageItems => Items.OfType<PackageItemListViewModel>().ToArray();
+        public IEnumerable<PackageItemListViewModel> PackageItemsInstalled => ItemsInstalled.OfType<PackageItemListViewModel>().ToArray();
 
         /// <summary>
-        /// Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
+        /// Installed Items (excluding Loading indicator) that are currently shown after applying any UI filtering.
         /// </summary>
-        public IEnumerable<PackageItemListViewModel> PackageItemsFiltered
+        public IEnumerable<PackageItemListViewModel> InstalledPackageItemsFiltered
         {
             get
             {
-                if (CollectionView.Filter != null)
+                if (ItemsInstalledCollectionView.Filter != null)
                 {
-                    return CollectionView.OfType<PackageItemListViewModel>();
+                    return ItemsInstalledCollectionView.OfType<PackageItemListViewModel>();
                 }
                 else
                 {
-                    return PackageItems;
+                    return PackageItemsInstalled;
                 }
             }
         }
@@ -167,6 +175,7 @@ namespace NuGet.PackageManagement.UI
             string loadingMessage,
             INuGetUILogger logger,
             Task<SearchResult<IPackageSearchMetadata>> searchResultTask,
+            ItemFilter filterToRender,
             CancellationToken token)
         {
             if (loader == null)
@@ -195,7 +204,10 @@ namespace NuGet.PackageManagement.UI
 
             var selectedPackageItem = SelectedPackageItem;
 
-            await _list.ItemsLock.ExecuteAsync(() =>
+            InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
+            ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
+            
+            await currentListBox.ItemsLock.ExecuteAsync(() =>
             {
                 ClearPackageList();
                 return Task.CompletedTask;
@@ -217,12 +229,12 @@ namespace NuGet.PackageManagement.UI
             if (selectedItem != null)
             {
                 // select the the previously selected item if it still exists.
-                selectedItem = PackageItemsFiltered
+                selectedItem = InstalledPackageItemsFiltered
                     .FirstOrDefault(item => item.Id.Equals(selectedItem.Id, StringComparison.OrdinalIgnoreCase));
             }
 
             // select the first item if none was selected before
-            _list.SelectedItem = selectedItem ?? PackageItemsFiltered.FirstOrDefault();
+            _list.SelectedItem = selectedItem ?? InstalledPackageItemsFiltered.FirstOrDefault();
         }
 
         private async Task LoadItemsAsync(PackageItemListViewModel selectedPackageItem, CancellationToken token)
@@ -239,13 +251,15 @@ namespace NuGet.PackageManagement.UI
             await TaskScheduler.Default;
 
             var addedLoadingIndicator = false;
+            var list = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
+            ObservableCollection<object> currentItems = IsBrowseTab ? ItemsBrowse : ItemsInstalled;
 
             try
             {
                 // add Loading... indicator if not present
-                if (!Items.Contains(_loadingStatusIndicator))
+                if (!ItemsBrowse.Contains(_loadingStatusIndicator))
                 {
-                    Items.Add(_loadingStatusIndicator);
+                    ItemsBrowse.Add(_loadingStatusIndicator);
                     addedLoadingIndicator = true;
                 }
 
@@ -304,13 +318,13 @@ namespace NuGet.PackageManagement.UI
                     // do not keep the LoadingStatus.Loading forever.
                     // This is a workaround.
                     var emptyListCount = addedLoadingIndicator ? 1 : 0;
-                    if (Items.Count == emptyListCount)
+                    if (ItemsBrowse.Count == emptyListCount)
                     {
                         _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
                     }
                     else
                     {
-                        Items.Remove(_loadingStatusIndicator);
+                        ItemsBrowse.Remove(_loadingStatusIndicator);
                     }
                 }
             }
@@ -325,13 +339,13 @@ namespace NuGet.PackageManagement.UI
             switch (itemFilter)
             {
                 case ItemFilter.Installed:
-                    CollectionView.Filter = null;
+                    ItemsInstalledCollectionView.Filter = null;
                     break;
                 case ItemFilter.UpdatesAvailable:
-                    CollectionView.Filter = (item) => item == _loadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
+                    ItemsInstalledCollectionView.Filter = (item) => item == _loadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
                     break;
                 case ItemFilter.Consolidate:
-                    CollectionView.Filter = null; //TODO: setup
+                    ItemsInstalledCollectionView.Filter = null; //TODO: setup
                     break;
                 default: break;
             }
@@ -467,11 +481,11 @@ namespace NuGet.PackageManagement.UI
 
                     _loadingStatusIndicator.Status = state.LoadingStatus;
 
-                    if (!Items.Contains(_loadingStatusIndicator))
+                    if (!ItemsBrowse.Contains(_loadingStatusIndicator))
                     {
                         await _list.ItemsLock.ExecuteAsync(() =>
                         {
-                            Items.Add(_loadingStatusIndicator);
+                            ItemsBrowse.Add(_loadingStatusIndicator);
                             return Task.CompletedTask;
                         });
                     }
@@ -507,10 +521,10 @@ namespace NuGet.PackageManagement.UI
         }
 
         /// <summary>
-        /// Appends <c>packages</c> to the internal <see cref="Items"> list
+        /// Appends <c>packages</c> to the internal <see cref="ItemsBrowse"> list
         /// </summary>
         /// <param name="packages">Packages collection to add</param>
-        /// <param name="refresh">Clears <see cref="Items"> list if set to <c>true</c></param>
+        /// <param name="refresh">Clears <see cref="ItemsBrowse"> list if set to <c>true</c></param>
         private void UpdatePackageList(IEnumerable<PackageItemListViewModel> packages, bool refresh)
         {
             _joinableTaskFactory.Value.Run(async () =>
@@ -519,7 +533,7 @@ namespace NuGet.PackageManagement.UI
                 await _list.ItemsLock.ExecuteAsync(() =>
                 {
                     // remove the loading status indicator if it's in the list
-                    bool removed = Items.Remove(_loadingStatusIndicator);
+                    bool removed = ItemsBrowse.Remove(_loadingStatusIndicator);
 
                     if (refresh)
                     {
@@ -530,13 +544,13 @@ namespace NuGet.PackageManagement.UI
                     foreach (var package in packages)
                     {
                         package.PropertyChanged += Package_PropertyChanged;
-                        Items.Add(package);
+                        ItemsBrowse.Add(package);
                         _selectedCount = package.Selected ? _selectedCount + 1 : _selectedCount;
                     }
 
                     if (removed)
                     {
-                        Items.Add(_loadingStatusIndicator);
+                        ItemsBrowse.Add(_loadingStatusIndicator);
                     }
 
                     return Task.CompletedTask;
@@ -549,20 +563,19 @@ namespace NuGet.PackageManagement.UI
         /// </summary>
         private void ClearPackageList()
         {
-            foreach (var package in PackageItems)
+            foreach (var package in PackageItemsInstalled)
             {
                 package.PropertyChanged -= Package_PropertyChanged;
             }
 
-            Items.Clear();
+            ItemsBrowse.Clear();
             _loadingStatusBar.ItemsLoaded = 0;
         }
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)
         {
-            // in this case, we only need to update PackageStatus of
-            // existing items in the package list
-            foreach (var package in PackageItemsFiltered)
+            // Only update PackageStatus of Installed items shown in the current UI Filter.
+            foreach (var package in InstalledPackageItemsFiltered)
             {
                 package.UpdatePackageStatus(installedPackages);
             }
@@ -597,7 +610,7 @@ namespace NuGet.PackageManagement.UI
             }
 
             //Are any packages shown with the current filter?
-            int packageCount = FilteredItemsCount;
+            int packageCount = FilteredInstalledItemsCount;
 
             _updateButtonContainer.Visibility =
                 packageCount > 0 ?
@@ -684,7 +697,7 @@ namespace NuGet.PackageManagement.UI
             {
                 var first = _scrollViewer.VerticalOffset;
                 var last = _scrollViewer.ViewportHeight + first;
-                if (_scrollViewer.ViewportHeight > 0 && last >= Items.Count)
+                if (_scrollViewer.ViewportHeight > 0 && last >= ItemsBrowse.Count)
                 {
                     NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
                         LoadItemsAsync(selectedPackageItem: null, token: CancellationToken.None)
@@ -722,7 +735,7 @@ namespace NuGet.PackageManagement.UI
 
         private void _updateButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedPackages = PackageItemsFiltered.Where(p => p.Selected).ToArray();
+            var selectedPackages = InstalledPackageItemsFiltered.Where(p => p.Selected).ToArray();
             UpdateButtonClicked(selectedPackages);
         }
 
