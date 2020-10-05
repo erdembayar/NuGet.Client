@@ -1149,19 +1149,12 @@ namespace NuGet.PackageManagement.UI
                 _packageList.CheckBoxesEnabled = _topPanel.Filter == ItemFilter.UpdatesAvailable;
                 _packageList._updateButtonContainer.Visibility = _topPanel.Filter == ItemFilter.UpdatesAvailable ? Visibility.Visible : Visibility.Collapsed;
 
-                // Set a new cancellation token source which will be used to cancel this task in case
-                // new loading task starts or manager ui is closed while loading packages.
-                var loadCts = new CancellationTokenSource();
-                var oldCts = Interlocked.Exchange(ref _loadCts, loadCts);
-                oldCts?.Cancel();
-                oldCts?.Dispose();
-
                 var isUiFiltering = !_packageList.IsBrowseTab;
 
                 if (isUiFiltering)
                 {
                     //UI can apply filtering.
-                    _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
+                    //TODO: _packageList.FilterInstalledDataItems(_topPanel.Filter, _loadCts.Token);
                 }
 
                 //TODO: remove telemetry since UI filtering will be implied on InstalledData tabs?

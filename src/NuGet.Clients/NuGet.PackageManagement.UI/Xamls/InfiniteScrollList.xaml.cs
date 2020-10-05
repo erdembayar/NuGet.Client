@@ -253,9 +253,6 @@ namespace NuGet.PackageManagement.UI
 
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
 
-                //Any UI filter should be cleared when Loading.
-                ClearUIFilter();
-
                 if (selectedPackageItem != null)
                 {
                     UpdateSelectedItem(selectedPackageItem);
@@ -325,57 +322,22 @@ namespace NuGet.PackageManagement.UI
 
         internal void FilterInstalledDataItems(ItemFilter itemFilter, CancellationToken token)
         {
-            if (!Items.Contains(_loadingStatusIndicator))
+            switch (itemFilter)
             {
-                Items.Add(_loadingStatusIndicator);
-            }
-            _loadingStatusIndicator.Status = LoadingStatus.Loading;
-
-            // If there is another async loading process - cancel it.
-            var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
-
-            try
-            {
-                if (itemFilter == ItemFilter.UpdatesAvailable)
-                {
-                    ApplyUIFilterForUpdatesAvailable();
-                }
-                else
-                {
-                    //Show all the items, without an Update filter.
-                    ClearUIFilter();
-                }
-            }
-            finally
-            {
-                //If no items are shown in the filter, indicate in the list that no packages are found.
-                if (FilteredItemsCount == 0)
-                {
-                    _loadingStatusIndicator.Status = LoadingStatus.NoItemsFound;
-                }
-                else
-                {
-                    if (Items.Contains(_loadingStatusIndicator))
-                    {
-                        Items.Remove(_loadingStatusIndicator);
-                    }
-                }
+                case ItemFilter.Installed:
+                    CollectionView.Filter = null;
+                    break;
+                case ItemFilter.UpdatesAvailable:
+                    CollectionView.Filter = (item) => item == _loadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
+                    break;
+                case ItemFilter.Consolidate:
+                    CollectionView.Filter = null; //TODO: setup
+                    break;
+                default: break;
             }
 
             UpdateCheckBoxStatus();
-
             LoadItemsCompleted?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void ApplyUIFilterForUpdatesAvailable()
-        {
-            CollectionView.Filter = (item) => item == _loadingStatusIndicator || (item as PackageItemListViewModel).IsUpdateAvailable;
-        }
-
-        private void ClearUIFilter()
-        {
-            CollectionView.Filter = null;
         }
 
         private async Task LoadItemsCoreAsync(IPackageItemLoader currentLoader, CancellationToken token)
