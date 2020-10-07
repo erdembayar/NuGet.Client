@@ -60,7 +60,7 @@ namespace NuGet.PackageManagement.UI.Test
         {
             var list = new InfiniteScrollList();
 
-            Assert.Same(list.DataContext, list.ItemsBrowse);
+            Assert.Same(list.DataContext, list);
         }
 
         [WpfFact]
@@ -108,6 +108,7 @@ namespace NuGet.PackageManagement.UI.Test
                         loadingMessage: "a",
                         logger: null,
                         searchResultTask: Task.FromResult<SearchResult<IPackageSearchMetadata>>(null),
+                        filterToRender: ItemFilter.All, //Irrelevant for this test
                         token: CancellationToken.None);
                 });
 
@@ -129,6 +130,7 @@ namespace NuGet.PackageManagement.UI.Test
                         loadingMessage,
                         logger: null,
                         searchResultTask: Task.FromResult<SearchResult<IPackageSearchMetadata>>(null),
+                        filterToRender: ItemFilter.All, //Irrelevant for this test
                         token: CancellationToken.None);
                 });
 
@@ -148,6 +150,7 @@ namespace NuGet.PackageManagement.UI.Test
                         loadingMessage: "a",
                         logger: null,
                         searchResultTask: null,
+                        filterToRender: ItemFilter.All, //Irrelevant for this test
                         token: CancellationToken.None);
                 });
 
@@ -167,6 +170,7 @@ namespace NuGet.PackageManagement.UI.Test
                         loadingMessage: "a",
                         logger: null,
                         searchResultTask: Task.FromResult<SearchResult<IPackageSearchMetadata>>(null),
+                        filterToRender: ItemFilter.All, //Irrelevant for this test
                         token: new CancellationToken(canceled: true));
                 });
         }
@@ -263,6 +267,7 @@ namespace NuGet.PackageManagement.UI.Test
                     loadingMessage: "a",
                     logger: logger.Object,
                     searchResultTask: searchResultTask,
+                    filterToRender: ItemFilter.All, //Irrelevant for this test
                     token: CancellationToken.None);
 
                 var errorMessage = await taskCompletionSource.Task;
@@ -325,6 +330,7 @@ namespace NuGet.PackageManagement.UI.Test
                 loadingMessage: "Test loading",
                 logger: testLogger,
                 searchResultTask: searchTask,
+                filterToRender: ItemFilter.All, //Irrelevant for this test
                 token: CancellationToken.None);
             _output.WriteLine("2. End act");
 
