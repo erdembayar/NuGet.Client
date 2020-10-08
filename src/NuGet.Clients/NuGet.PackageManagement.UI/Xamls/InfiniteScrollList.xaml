@@ -258,7 +258,7 @@
       This enables the loadingStatusBar to appear to be in the listbox.
     -->
     <ControlTemplate x:Key="ScrollViewerWithScrollBarExtraLargeOnTop" TargetType="{x:Type ScrollViewer}">
-      <Grid x:Name="Grid" Background="{TemplateBinding Background}" >
+      <Grid x:Name="Grid" Background="{TemplateBinding Background}" Visibility="{TemplateBinding Visibility}" >
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
