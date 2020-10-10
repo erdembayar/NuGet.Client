@@ -18,9 +18,9 @@ namespace NuGet.Configuration
             {
                 try
                 {
-                    return XmlUtility.Load(fullPath,LoadOptions.PreserveWhitespace);
+                    return XmlUtility.Load(fullPath, LoadOptions.PreserveWhitespace);
                 }
-                catch (FileNotFoundException) { }                
+                catch (FileNotFoundException) { }
             }
 
             AddFile(fullPath, content.Save);

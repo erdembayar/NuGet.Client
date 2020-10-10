@@ -634,7 +634,6 @@ NuGet.ProjectManagement.XmlTransformer
 NuGet.ProjectManagement.XmlTransformer.RevertFileAsync(System.Func<System.Threading.Tasks.Task<System.IO.Stream>> streamTaskFactory, string targetPath, System.Collections.Generic.IEnumerable<NuGet.ProjectManagement.InternalZipFileInfo> matchingFiles, NuGet.ProjectManagement.IMSBuildProjectSystem projectSystem, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 NuGet.ProjectManagement.XmlTransformer.TransformFileAsync(System.Func<System.Threading.Tasks.Task<System.IO.Stream>> streamTaskFactory, string targetPath, NuGet.ProjectManagement.IMSBuildProjectSystem projectSystem, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 NuGet.ProjectManagement.XmlTransformer.XmlTransformer(System.Collections.Generic.IDictionary<System.Xml.Linq.XName, System.Action<System.Xml.Linq.XElement, System.Xml.Linq.XElement>> nodeActions) -> void
-NuGet.ProjectManagement.XmlUtility
 abstract NuGet.ProjectManagement.ExecutionContext.OpenFile(string fullPath) -> System.Threading.Tasks.Task
 abstract NuGet.ProjectManagement.NuGetProject.GetInstalledPackagesAsync(System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<NuGet.Packaging.PackageReference>>
 abstract NuGet.ProjectManagement.NuGetProject.InstallPackageAsync(NuGet.Packaging.Core.PackageIdentity packageIdentity, NuGet.Protocol.Core.Types.DownloadResourceResult downloadResourceResult, NuGet.ProjectManagement.INuGetProjectContext nuGetProjectContext, System.Threading.CancellationToken token) -> System.Threading.Tasks.Task<bool>
@@ -867,16 +866,6 @@ static NuGet.ProjectManagement.XElementExtensions.MergeWith(this System.Xml.Linq
 static NuGet.ProjectManagement.XElementExtensions.MergeWith(this System.Xml.Linq.XElement source, System.Xml.Linq.XElement target, System.Collections.Generic.IDictionary<System.Xml.Linq.XName, System.Action<System.Xml.Linq.XElement, System.Xml.Linq.XElement>> nodeActions) -> System.Xml.Linq.XElement
 static NuGet.ProjectManagement.XElementExtensions.RemoveAttributes(this System.Xml.Linq.XElement element, System.Func<System.Xml.Linq.XAttribute, bool> condition) -> void
 static NuGet.ProjectManagement.XElementExtensions.RemoveIndented(this System.Xml.Linq.XNode element) -> void
-static NuGet.ProjectManagement.XmlUtility.CreateDocument(System.Xml.Linq.XName rootName, string path, NuGet.ProjectManagement.IMSBuildProjectSystem msBuildNuGetProjectSystem) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.CreateDocument(System.Xml.Linq.XName rootName, string root, string path, NuGet.ProjectManagement.INuGetProjectContext nuGetProjectContext) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.GetDocument(string root, string path) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.GetOrCreateDocument(System.Xml.Linq.XName rootName, string path, NuGet.ProjectManagement.IMSBuildProjectSystem msBuildNuGetProjectSystem) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.GetOrCreateDocument(System.Xml.Linq.XName rootName, string root, string path, NuGet.ProjectManagement.INuGetProjectContext nuGetProjectContext) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.LoadSafe(System.IO.Stream input) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.LoadSafe(System.IO.Stream input, System.Xml.Linq.LoadOptions options) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.LoadSafe(System.IO.Stream input, bool ignoreWhiteSpace) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.LoadSafe(string filePath) -> System.Xml.Linq.XDocument
-static NuGet.ProjectManagement.XmlUtility.TryParseDocument(string content, out System.Xml.Linq.XDocument document) -> bool
 static readonly NuGet.PackageManagement.NuGetEvent.LicenseWindowBegin -> int
 static readonly NuGet.PackageManagement.NuGetEvent.LicenseWindowEnd -> int
 static readonly NuGet.PackageManagement.NuGetEvent.LinkOpened -> int

@@ -5,4 +5,6 @@ const NuGet.ProjectManagement.ProjectBuildProperties.TargetFrameworkIdentifier =
 const NuGet.ProjectManagement.ProjectBuildProperties.TargetFrameworkProfile = "TargetFrameworkProfile" -> string
 const NuGet.ProjectManagement.ProjectBuildProperties.TargetFrameworkVersion = "TargetFrameworkVersion" -> string
 const NuGet.ProjectManagement.ProjectBuildProperties.TargetPlatformMoniker = "TargetPlatformMoniker" -> string
+static NuGet.ProjectManagement.FileSystemUtility.GetOrCreateXmlDocument(System.Xml.Linq.XName rootName, string root, string path, NuGet.ProjectManagement.INuGetProjectContext nuGetProjectContext) -> System.Xml.Linq.XDocument
+static NuGet.ProjectManagement.MSBuildNuGetProjectSystemUtility.GetOrCreateXmlDocument(System.Xml.Linq.XName rootName, string path, NuGet.ProjectManagement.IMSBuildProjectSystem msBuildNuGetProjectSystem) -> System.Xml.Linq.XDocument
 static NuGet.ProjectManagement.MessageLevelExtensions.ToLogLevel(this NuGet.ProjectManagement.MessageLevel messageLevel) -> NuGet.Common.LogLevel

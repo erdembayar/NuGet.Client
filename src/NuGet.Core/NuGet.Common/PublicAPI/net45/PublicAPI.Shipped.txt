@@ -445,7 +445,6 @@ NuGet.Common.WarningLevel.Default = 4 -> NuGet.Common.WarningLevel
 NuGet.Common.WarningLevel.Important = 2 -> NuGet.Common.WarningLevel
 NuGet.Common.WarningLevel.Minimal = 3 -> NuGet.Common.WarningLevel
 NuGet.Common.WarningLevel.Severe = 1 -> NuGet.Common.WarningLevel
-NuGet.Common.XmlUtility
 abstract NuGet.Common.LegacyLoggerAdapter.LogDebug(string data) -> void
 abstract NuGet.Common.LegacyLoggerAdapter.LogError(string data) -> void
 abstract NuGet.Common.LegacyLoggerAdapter.LogInformation(string data) -> void
@@ -619,7 +618,6 @@ static NuGet.Common.UriUtility.GetAbsolutePathFromFile(string sourceFile, string
 static NuGet.Common.UriUtility.GetLocalPath(string localOrUriPath) -> string
 static NuGet.Common.UriUtility.TryCreateSourceUri(string source, System.UriKind kind) -> System.Uri
 static NuGet.Common.UriUtility.UrlEncodeOdataParameter(string value) -> string
-static NuGet.Common.XmlUtility.Load(string filePath) -> System.Xml.Linq.XDocument
 static readonly NuGet.Common.ComparisonUtility.FrameworkReferenceNameComparer -> System.StringComparer
 static readonly NuGet.Common.FileUtility.FileSharePermissions -> System.IO.FileShare
 static readonly NuGet.Common.FileUtility.MaxTries -> int

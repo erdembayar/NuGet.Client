@@ -1245,7 +1245,6 @@ NuGet.Packaging.XmlDocFileSaveMode
 NuGet.Packaging.XmlDocFileSaveMode.Compress = 2 -> NuGet.Packaging.XmlDocFileSaveMode
 NuGet.Packaging.XmlDocFileSaveMode.None = 0 -> NuGet.Packaging.XmlDocFileSaveMode
 NuGet.Packaging.XmlDocFileSaveMode.Skip = 1 -> NuGet.Packaging.XmlDocFileSaveMode
-NuGet.Packaging.XmlUtility
 NuGet.Packaging.ZipArchiveExtensions
 NuGet.Packaging.ZipFilePair
 NuGet.Packaging.ZipFilePair.FileFullPath.get -> string
@@ -1719,8 +1718,6 @@ static NuGet.Packaging.TopologicalSortUtility.SortPackagesByDependencyOrder<T>(S
 static NuGet.Packaging.XElementExtensions.ElementsNoNamespace(this System.Xml.Linq.XContainer container, string localName) -> System.Collections.Generic.IEnumerable<System.Xml.Linq.XElement>
 static NuGet.Packaging.XElementExtensions.Except(this System.Xml.Linq.XElement source, System.Xml.Linq.XElement target) -> System.Xml.Linq.XElement
 static NuGet.Packaging.XElementExtensions.GetOptionalAttributeValue(this System.Xml.Linq.XElement element, string localName, string namespaceName = null) -> string
-static NuGet.Packaging.XmlUtility.LoadSafe(System.IO.Stream input) -> System.Xml.Linq.XDocument
-static NuGet.Packaging.XmlUtility.LoadSafe(System.IO.Stream input, bool ignoreWhiteSpace) -> System.Xml.Linq.XDocument
 static NuGet.Packaging.ZipArchiveExtensions.GetFiles(this System.IO.Compression.ZipArchive zipArchive) -> System.Collections.Generic.IEnumerable<string>
 static NuGet.Packaging.ZipArchiveExtensions.LookupEntry(this System.IO.Compression.ZipArchive zipArchive, string path) -> System.IO.Compression.ZipArchiveEntry
 static NuGet.Packaging.ZipArchiveExtensions.OpenFile(this System.IO.Compression.ZipArchive zipArchive, string path) -> System.IO.Stream

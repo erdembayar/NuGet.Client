@@ -8,7 +8,6 @@ using System.Linq;
 using System.Xml.Linq;
 using NuGet.ProjectManagement;
 using NuGet.VisualStudio;
-using NuGet.Shared;
 
 namespace NuGet.PackageManagement.VisualStudio
 {

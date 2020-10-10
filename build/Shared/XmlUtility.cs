@@ -20,7 +20,7 @@ namespace NuGet.Shared
             return Load(filePath, LoadOptions.None);
         }
 
-        internal static XDocument Load(string filePath,LoadOptions options)
+        internal static XDocument Load(string filePath, LoadOptions options)
         {
             using (var reader = XmlReader.Create(filePath, GetXmlReaderSettings(options)))
             {
