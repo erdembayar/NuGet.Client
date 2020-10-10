@@ -14,13 +14,14 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Threading;
 using NuGet.Common;
 using NuGet.PackageManagement.VisualStudio;
 using NuGet.Protocol.Core.Types;
 using NuGet.VisualStudio;
 using Mvs = Microsoft.VisualStudio.Shell;
-using Resx = NuGet.PackageManagement.UI;
+using Resx = NuGet.PackageManagement.UI.Resources;
 using Task = System.Threading.Tasks.Task;
 
 namespace NuGet.PackageManagement.UI
@@ -59,7 +60,14 @@ namespace NuGet.PackageManagement.UI
         public bool IsBrowseTab
         {
             get { return (bool)GetValue(IsBrowseTabProperty); }
-            set { SetValue(IsBrowseTabProperty, value); }
+            set
+            {
+                if (IsBrowseTab != value)
+                {
+                    SetValue(IsBrowseTabProperty, value);
+                    RenderListBox(listBoxToRender: CurrentlyShownListBox);
+                }       
+            }
         }
 
         public static readonly DependencyProperty IsBrowseTabProperty =
@@ -82,23 +90,22 @@ namespace NuGet.PackageManagement.UI
 
             InitializeComponent();
 
-            _listBrowse.ItemsLock = ReentrantSemaphore.Create(
-                initialCount: 1,
-                joinableTaskContext: _joinableTaskFactory.Value.Context,
-                mode: ReentrantSemaphore.ReentrancyMode.Stack);
-
-            _listInstalled.ItemsLock = ReentrantSemaphore.Create(
-                initialCount: 1,
-                joinableTaskContext: _joinableTaskFactory.Value.Context,
-                mode: ReentrantSemaphore.ReentrancyMode.Stack);
-
-            BindingOperations.EnableCollectionSynchronization(ItemsBrowse, _listBrowse.ItemsLock);
-            BindingOperations.EnableCollectionSynchronization(ItemsInstalled, _listInstalled.ItemsLock);
-
             DataContext = this;
             CheckBoxesEnabled = false;
 
+            RenderListBox(listBoxToRender: CurrentlyShownListBox);
+
             _loadingStatusIndicator.PropertyChanged += LoadingStatusIndicator_PropertyChanged;
+        }
+
+        private void RenderListBox(InfiniteScrollListBox listBoxToRender)
+        {
+            if (_dockPanel.Children.Count > 0)
+            {
+                _dockPanel.Children.Clear();
+            }
+
+            _dockPanel.Children.Add(listBoxToRender);
         }
 
         private void LoadingStatusIndicator_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -204,9 +211,9 @@ namespace NuGet.PackageManagement.UI
 
             var selectedPackageItem = SelectedPackageItem;
 
-            InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? _listBrowse : _listInstalled;
+            InfiniteScrollListBox currentListBox = filterToRender == ItemFilter.All ? ListBoxBrowse : ListBoxInstalled;
             ObservableCollection<object> currentItems = filterToRender == ItemFilter.All ? ItemsBrowse : ItemsInstalled;
-            
+
             await currentListBox.ItemsLock.ExecuteAsync(() =>
             {
                 ClearPackageList(currentItems);
@@ -243,11 +250,11 @@ namespace NuGet.PackageManagement.UI
             {
                 if (IsBrowseTab)
                 {
-                    return _listBrowse;
+                    return ListBoxBrowse;
                 }
                 else
                 {
-                    return _listInstalled;
+                    return ListBoxInstalled;
                 }
             }
         }
@@ -313,9 +320,9 @@ namespace NuGet.PackageManagement.UI
                 // The user cancelled the login, but treat as a load error in UI
                 // So the retry button and message is displayed
                 // Do not log to the activity log, since it is not a NuGet error
-                _logger.Log(new LogMessage(LogLevel.Error, Resx.Resources.Text_UserCanceled));
+                _logger.Log(new LogMessage(LogLevel.Error, Resx.Text_UserCanceled));
 
-                _loadingStatusIndicator.SetError(Resx.Resources.Text_UserCanceled);
+                _loadingStatusIndicator.SetError(Resx.Text_UserCanceled);
 
                 _loadingStatusBar.SetCancelled();
                 _loadingStatusBar.Visibility = Visibility.Visible;
@@ -396,7 +403,7 @@ namespace NuGet.PackageManagement.UI
             // makes sure we update using the relevant one.
             if (currentLoader == _loader)
             {
-                UpdatePackageList(currentListBox, currentItems,  loadedItems, refresh: false);
+                UpdatePackageList(currentListBox, currentItems, loadedItems, refresh: false);
             }
 
             token.ThrowIfCancellationRequested();
@@ -806,6 +813,82 @@ namespace NuGet.PackageManagement.UI
         public void ResetLoadingStatusIndicator()
         {
             _loadingStatusIndicator.Reset(string.Empty);
+        }
+
+        private InfiniteScrollListBox _listBoxBrowse;
+        internal InfiniteScrollListBox ListBoxBrowse
+        {
+            get
+            {
+                if (_listBoxBrowse == null)
+                {
+                    var lb = CreateInfiniteScrollListBox();
+                    lb.Name = nameof(_listBoxBrowse);
+                    lb.ItemsSource = ItemsBrowse;
+
+                    SetupListBoxSynchronization(lb, collection: ItemsBrowse);
+
+                    _listBoxBrowse = lb;
+                }
+                return _listBoxBrowse;
+            }
+        }
+
+        private InfiniteScrollListBox _listBoxInstalled;
+        internal InfiniteScrollListBox ListBoxInstalled
+        {
+            get
+            {
+                if (_listBoxInstalled == null)
+                {
+                    var lb = CreateInfiniteScrollListBox();
+                    lb.Name = nameof(_listBoxInstalled);
+                    lb.ItemsSource = ItemsInstalled;
+
+                    SetupListBoxSynchronization(lb, collection: ItemsInstalled);
+
+                    _listBoxInstalled = lb;
+                }
+                return _listBoxInstalled;
+            }
+        }
+
+        private void SetupListBoxSynchronization(InfiniteScrollListBox lb, ObservableCollection<object> collection)
+        {
+            lb.ItemsLock = ReentrantSemaphore.Create(
+                initialCount: 1,
+                joinableTaskContext: _joinableTaskFactory.Value.Context,
+                mode: ReentrantSemaphore.ReentrancyMode.Stack);
+
+            BindingOperations.EnableCollectionSynchronization(collection, lb.ItemsLock);
+        }
+
+        private InfiniteScrollListBox CreateInfiniteScrollListBox()
+        {
+            InfiniteScrollListBox lb = new InfiniteScrollListBox()
+            {
+                BorderThickness = new Thickness(0, 0, 0, 0),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            };
+
+            lb.PreviewKeyUp += List_PreviewKeyUp;
+            lb.SelectionChanged += List_SelectionChanged;
+            lb.Loaded += List_Loaded;
+
+            lb.SetResourceReference(dp: ListBox.BackgroundProperty, name: Brushes.ListPaneBackground);
+            lb.SetResourceReference(dp: ListBox.ForegroundProperty, name: Brushes.UIText);
+            lb.SetResourceReference(dp: ItemsControl.ItemContainerStyleSelectorProperty, name: "itemStyleSelector");
+
+            lb.SetValue(System.Windows.Automation.AutomationProperties.NameProperty, Resx.Accessibility_Packages);
+            lb.SetValue(DockPanel.DockProperty, Dock.Bottom);
+            lb.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+            lb.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Visible);
+            lb.SetValue(VirtualizingPanel.IsVirtualizingProperty, true);
+            lb.SetValue(VirtualizingPanel.VirtualizationModeProperty, VirtualizationMode.Recycling);
+            lb.SetValue(VirtualizingPanel.CacheLengthProperty, new VirtualizationCacheLength(1, 2));
+            lb.SetValue(VirtualizingPanel.CacheLengthUnitProperty, VirtualizationCacheLengthUnit.Page);
+
+            return lb;
         }
     }
 }
