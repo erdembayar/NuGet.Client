@@ -76,7 +76,7 @@ namespace NuGet.PackageManagement.VisualStudio
 
             // Check if the project is not CPS capable or if it is CPS capable that its opt'd in PackageReferences
             if (!VsHierarchyUtility.IsCPSCapabilityCompliant(hierarchy) ||
-                !VsHierarchyUtility.IsProjectCapabilityCompliant(hierarchy))
+                !await VsHierarchyUtility.IsProjectCapabilityCompliantAsync(hierarchy))
             {
                 return null;
             }
