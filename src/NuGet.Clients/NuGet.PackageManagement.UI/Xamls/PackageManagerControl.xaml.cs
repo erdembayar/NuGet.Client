@@ -69,6 +69,12 @@ namespace NuGet.PackageManagement.UI
         private PackageManagerControl()
         {
             InitializeComponent();
+            _packageList.Loaded += _packageList_Loaded;
+        }
+
+        private void _packageList_Loaded(object sender, RoutedEventArgs e)
+        {
+            SynchronizeTabSelectionFlag();
         }
 
         public static async ValueTask<PackageManagerControl> CreateAsync(PackageManagerModel model, INuGetUILogger uiLogger)
@@ -1140,7 +1146,7 @@ namespace NuGet.PackageManagement.UI
         {
             if (_initialized)
             {
-                _packageList.IsBrowseTab = _topPanel.Filter == ItemFilter.All;
+                SynchronizeTabSelectionFlag();
 
                 var timeSpan = GetTimeSinceLastRefreshAndRestart();
                 _packageList.ResetLoadingStatusIndicator(); //TODO: remove this?
@@ -1162,6 +1168,11 @@ namespace NuGet.PackageManagement.UI
 
                 _detailModel.OnFilterChanged(e.PreviousFilter, _topPanel.Filter);
             }
+        }
+
+        private void SynchronizeTabSelectionFlag()
+        {
+            _packageList.IsBrowseTab = _topPanel.Filter == ItemFilter.All;
         }
 
         /// <summary>

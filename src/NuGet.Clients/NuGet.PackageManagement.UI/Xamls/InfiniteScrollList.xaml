@@ -95,6 +95,27 @@
       </DataTemplate.Triggers>
     </DataTemplate>
 
+    <!-- Template used by ListBox that represents a list of packages. -->
+    <ControlTemplate
+      x:Key="ListBoxTemplate"
+      TargetType="{x:Type ListBox}">
+      <Border
+        x:Name="Bd"
+        BorderBrush="{TemplateBinding BorderBrush}"
+        BorderThickness="{TemplateBinding BorderThickness}"
+        Background="{TemplateBinding Background}"
+        Padding="1"
+        SnapsToDevicePixels="true">
+        <ScrollViewer
+              Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
+              Focusable="false"
+              Padding="{TemplateBinding Padding}">
+          <ItemsPresenter
+                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+        </ScrollViewer>
+      </Border>
+    </ControlTemplate>
+
     <!-- Template used by ListBoxItem that represents a package. -->
     <ControlTemplate
       x:Key="ListBoxItemTemplate"
@@ -349,29 +370,7 @@
       SelectionChanged="List_SelectionChanged"
       Loaded="List_Loaded"
       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource BooleanToVisibilityConverter}}"
-      ItemsSource="{Binding ItemsBrowse}">
-      <!-- set the template to disable the background change when the IsEnabled is false. -->
-      <ListBox.Template>
-        <ControlTemplate
-          TargetType="{x:Type ListBox}">
-          <Border
-            x:Name="Bd"
-            BorderBrush="{TemplateBinding BorderBrush}"
-            BorderThickness="{TemplateBinding BorderThickness}"
-            Background="{TemplateBinding Background}"
-            Padding="1"
-            SnapsToDevicePixels="true">
-            <ScrollViewer
-              Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
-              Focusable="false"
-              Padding="{TemplateBinding Padding}">
-              <ItemsPresenter
-                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-            </ScrollViewer>
-          </Border>
-        </ControlTemplate>
-      </ListBox.Template>
-    </nuget:InfiniteScrollListBox>
+      ItemsSource="{Binding ItemsBrowse}" />
     <nuget:InfiniteScrollListBox
       d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
       x:Name="_listInstalled"
@@ -392,28 +391,7 @@
       SelectionChanged="List_SelectionChanged"
       Loaded="List_Loaded"
       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
-      ItemsSource="{Binding ItemsInstalled}">
-      <!-- set the template to disable the background change when the IsEnabled is false. -->
-      <ListBox.Template>
-        <ControlTemplate
-          TargetType="{x:Type ListBox}">
-          <Border
-            x:Name="Bd"
-            BorderBrush="{TemplateBinding BorderBrush}"
-            BorderThickness="{TemplateBinding BorderThickness}"
-            Background="{TemplateBinding Background}"
-            Padding="1"
-            SnapsToDevicePixels="true">
-            <ScrollViewer
-              Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
-              Focusable="false"
-              Padding="{TemplateBinding Padding}">
-              <ItemsPresenter
-                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-            </ScrollViewer>
-          </Border>
-        </ControlTemplate>
-      </ListBox.Template>
-    </nuget:InfiniteScrollListBox>
+      ItemsSource="{Binding ItemsInstalled}" />
+
   </DockPanel>
 </UserControl>
