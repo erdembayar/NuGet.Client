@@ -95,27 +95,6 @@
       </DataTemplate.Triggers>
     </DataTemplate>
 
-    <!-- Template used by ListBox that represents a list of packages. -->
-    <ControlTemplate
-      x:Key="ListBoxTemplate"
-      TargetType="{x:Type ListBox}">
-      <Border
-        x:Name="Bd"
-        BorderBrush="{TemplateBinding BorderBrush}"
-        BorderThickness="{TemplateBinding BorderThickness}"
-        Background="{TemplateBinding Background}"
-        Padding="1"
-        SnapsToDevicePixels="true">
-        <ScrollViewer
-              Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
-              Focusable="false"
-              Padding="{TemplateBinding Padding}">
-          <ItemsPresenter
-                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-        </ScrollViewer>
-      </Border>
-    </ControlTemplate>
-
     <!-- Template used by ListBoxItem that represents a package. -->
     <ControlTemplate
       x:Key="ListBoxItemTemplate"
@@ -279,7 +258,7 @@
       This enables the loadingStatusBar to appear to be in the listbox.
     -->
     <ControlTemplate x:Key="ScrollViewerWithScrollBarExtraLargeOnTop" TargetType="{x:Type ScrollViewer}">
-      <Grid x:Name="Grid" Background="{TemplateBinding Background}" >
+      <Grid x:Name="Grid" Background="{TemplateBinding Background}">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
@@ -294,6 +273,33 @@
         <ScrollBar x:Name="PART_HorizontalScrollBar" AutomationProperties.AutomationId="HorizontalScrollBar" Cursor="Arrow" Grid.Column="0" Maximum="{TemplateBinding ScrollableWidth}" Minimum="0" Orientation="Horizontal" Grid.Row="1" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" ViewportSize="{TemplateBinding ViewportWidth}"/>
       </Grid>
     </ControlTemplate>
+
+    <!-- Template used by ListBox that represents a list of packages. -->
+    <Style x:Key="ListBoxStyle" TargetType="{x:Type ListBox}">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate>
+            <Border
+            x:Name="Bd"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            Background="{TemplateBinding Background}"
+            Padding="1"
+            SnapsToDevicePixels="true"
+            Visibility="{TemplateBinding Visibility}">
+              <ScrollViewer
+                Template="{StaticResource ScrollViewerWithScrollBarExtraLargeOnTop}"
+                Focusable="false"
+                Padding="{TemplateBinding Padding}"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Visible">
+                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+              </ScrollViewer>
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
   </UserControl.Resources>
   <DockPanel LastChildFill="True">
     <Border
@@ -353,13 +359,12 @@
     <nuget:InfiniteScrollListBox
       d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
       x:Name="_listBrowse"
+      Style="{StaticResource ListBoxStyle}"
       AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
       DockPanel.Dock="Bottom"
       PreviewKeyUp="List_PreviewKeyUp"
       Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
       Foreground="{DynamicResource {x:Static nuget:Brushes.UIText}}"
-      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-      ScrollViewer.VerticalScrollBarVisibility="Visible"
       ItemContainerStyleSelector="{DynamicResource itemStyleSelector}"
       VirtualizingPanel.IsVirtualizing="true"
       VirtualizingPanel.VirtualizationMode="Recycling"
@@ -374,13 +379,12 @@
     <nuget:InfiniteScrollListBox
       d:DataContext="{d:DesignData Source=/Design/PackageItemListViewSampleData.xaml,IsDesignTimeCreatable=True}"
       x:Name="_listInstalled"
+      Style="{StaticResource ListBoxStyle}"
       AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
       DockPanel.Dock="Bottom"
       PreviewKeyUp="List_PreviewKeyUp"
       Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
       Foreground="{DynamicResource {x:Static nuget:Brushes.UIText}}"
-      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-      ScrollViewer.VerticalScrollBarVisibility="Visible"
       ItemContainerStyleSelector="{DynamicResource itemStyleSelector}"
       VirtualizingPanel.IsVirtualizing="true"
       VirtualizingPanel.VirtualizationMode="Recycling"
