@@ -198,8 +198,11 @@ namespace NuGet.PackageManagement.UI
             _logger = logger;
             _initialSearchResultTask = searchResultTask;
             _loadingStatusIndicator.Reset(loadingMessage);
-            _loadingStatusBar.Visibility = Visibility.Hidden;
-            _loadingStatusBar.Reset(loadingMessage, loader.IsMultiSource);
+            if (filterToRender == ItemFilter.All)
+            {
+                _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
+                _loadingStatusBarBrowse.Reset(loadingMessage, loader.IsMultiSource);
+            }
 
             var selectedPackageItem = SelectedPackageItem;
 
@@ -215,7 +218,7 @@ namespace NuGet.PackageManagement.UI
             _selectedCount = 0;
 
             // triggers the package list loader
-            await LoadItemsAsync(currentListBox, currentItems, selectedPackageItem, token);
+            await LoadItemsAsync(currentListBox, currentItems, selectedPackageItem, filterToRender, token);
         }
 
         /// <summary>
@@ -267,17 +270,18 @@ namespace NuGet.PackageManagement.UI
         }
 
         private async Task LoadItemsAsync(InfiniteScrollListBox currentListBox,
-            ObservableCollection<object> currentItems, PackageItemListViewModel selectedPackageItem, CancellationToken token)
+            ObservableCollection<object> currentItems, PackageItemListViewModel selectedPackageItem, ItemFilter filterToRender, CancellationToken token)
         {
             // If there is another async loading process - cancel it.
             var loadCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             Interlocked.Exchange(ref _loadCts, loadCts)?.Cancel();
 
-            await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, _loader, loadCts);
+            await RepopulatePackageListAsync(currentListBox, currentItems, selectedPackageItem, _loader, filterToRender, loadCts);
         }
 
         private async Task RepopulatePackageListAsync(InfiniteScrollListBox currentListBox,
-            ObservableCollection<object> currentItems, PackageItemListViewModel selectedPackageItem, IPackageItemLoader currentLoader, CancellationTokenSource loadCts)
+            ObservableCollection<object> currentItems, PackageItemListViewModel selectedPackageItem, IPackageItemLoader currentLoader,
+            ItemFilter filterToRender, CancellationTokenSource loadCts)
         {
             await TaskScheduler.Default;
 
@@ -292,7 +296,7 @@ namespace NuGet.PackageManagement.UI
                     addedLoadingIndicator = true;
                 }
 
-                await LoadItemsCoreAsync(currentListBox, currentItems, currentLoader, loadCts.Token);
+                await LoadItemsCoreAsync(currentListBox, currentItems, currentLoader, filterToRender, loadCts.Token);
 
                 await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
 
@@ -316,8 +320,11 @@ namespace NuGet.PackageManagement.UI
 
                 _loadingStatusIndicator.SetError(Resx.Resources.Text_UserCanceled);
 
-                _loadingStatusBar.SetCancelled();
-                _loadingStatusBar.Visibility = Visibility.Visible;
+                if (filterToRender == ItemFilter.All)
+                {
+                    _loadingStatusBarBrowse.SetCancelled();
+                    _loadingStatusBarBrowse.Visibility = Visibility.Visible;
+                }
             }
             catch (Exception ex) when (!loadCts.IsCancellationRequested)
             {
@@ -335,8 +342,11 @@ namespace NuGet.PackageManagement.UI
 
                 _loadingStatusIndicator.SetError(errorMessage);
 
-                _loadingStatusBar.SetError();
-                _loadingStatusBar.Visibility = Visibility.Visible;
+                if (filterToRender == ItemFilter.All)
+                {
+                    _loadingStatusBarBrowse.SetError();
+                    _loadingStatusBarBrowse.Visibility = Visibility.Visible;
+                }
             }
             finally
             {
@@ -384,7 +394,7 @@ namespace NuGet.PackageManagement.UI
         }
 
         private async Task LoadItemsCoreAsync(InfiniteScrollListBox currentListBox,
-            ObservableCollection<object> currentItems, IPackageItemLoader currentLoader, CancellationToken token)
+            ObservableCollection<object> currentItems, IPackageItemLoader currentLoader, ItemFilter filterToRender, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
 
@@ -400,12 +410,15 @@ namespace NuGet.PackageManagement.UI
 
             token.ThrowIfCancellationRequested();
 
-            await _joinableTaskFactory.Value.RunAsync(async () =>
+            if (filterToRender == ItemFilter.All)
             {
-                await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
+                await _joinableTaskFactory.Value.RunAsync(async () =>
+                {
+                    await _joinableTaskFactory.Value.SwitchToMainThreadAsync();
 
-                _loadingStatusBar.ItemsLoaded = currentLoader.State.ItemsCount;
-            });
+                    _loadingStatusBarBrowse.ItemsLoaded = currentLoader.State.ItemsCount;
+                });
+            }
 
             token.ThrowIfCancellationRequested();
 
@@ -501,17 +514,19 @@ namespace NuGet.PackageManagement.UI
 
                 if (loader == _loader)
                 {
-                    _loadingStatusBar.UpdateLoadingState(state);
-
                     // decide when to show status bar
-                    var desiredVisibility = EvaluateStatusBarVisibility(loader, state);
-
-                    if (_loadingStatusBar.Visibility != Visibility.Visible
-                        && desiredVisibility == Visibility.Visible)
+                    if (currentListBox == _listBrowse)
                     {
-                        _loadingStatusBar.Visibility = desiredVisibility;
-                    }
+                        _loadingStatusBarBrowse.UpdateLoadingState(state);
 
+                        var desiredVisibility = EvaluateStatusBarVisibility(loader, state);
+
+                        if (_loadingStatusBarBrowse.Visibility != Visibility.Visible
+                            && desiredVisibility == Visibility.Visible)
+                        {
+                            _loadingStatusBarBrowse.Visibility = desiredVisibility;
+                        }
+                    }
                     _loadingStatusIndicator.Status = state.LoadingStatus;
 
                     if (!currentItems.Contains(_loadingStatusIndicator))
@@ -538,7 +553,7 @@ namespace NuGet.PackageManagement.UI
 
             if (loader.IsMultiSource)
             {
-                var hasMore = _loadingStatusBar.ItemsLoaded != 0 && state.ItemsCount > _loadingStatusBar.ItemsLoaded;
+                var hasMore = _loadingStatusBarBrowse.ItemsLoaded != 0 && state.ItemsCount > _loadingStatusBarBrowse.ItemsLoaded;
                 if (hasMore)
                 {
                     statusBarVisibility = Visibility.Visible;
@@ -603,7 +618,10 @@ namespace NuGet.PackageManagement.UI
             }
 
             itemsToClear.Clear();
-            _loadingStatusBar.ItemsLoaded = 0;
+            if (itemsToClear == ItemsBrowse)
+            {
+                _loadingStatusBarBrowse.ItemsLoaded = 0;
+            }
         }
 
         public void UpdatePackageStatus(PackageCollectionItem[] installedPackages)
@@ -716,7 +734,8 @@ namespace NuGet.PackageManagement.UI
                     if (scrollViewer.ViewportHeight > 0 && last >= ItemsBrowse.Count)
                     {
                         NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
-                            LoadItemsAsync(CurrentlyShownListBox, CurrentlyShownItems, selectedPackageItem: null, token: CancellationToken.None)
+                            LoadItemsAsync(CurrentlyShownListBox, CurrentlyShownItems, selectedPackageItem: null,
+                                filterToRender: ItemFilter.All, token: CancellationToken.None)
                         );
                     }
                 }
@@ -767,22 +786,22 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
-        private void _loadingStatusBar_ShowMoreResultsClick(object sender, RoutedEventArgs e)
+        private void _loadingStatusBarBrowse_ShowMoreResultsClick(object sender, RoutedEventArgs e)
         {
             var packageItems = _loader?.GetCurrent() ?? Enumerable.Empty<PackageItemListViewModel>();
-            UpdatePackageList(CurrentlyShownListBox, CurrentlyShownItems, packageItems, refresh: true);
-            _loadingStatusBar.ItemsLoaded = _loader?.State.ItemsCount ?? 0;
+            UpdatePackageList(_listBrowse, ItemsBrowse, packageItems, refresh: true);
+            _loadingStatusBarBrowse.ItemsLoaded = _loader?.State.ItemsCount ?? 0;
 
             var desiredVisibility = EvaluateStatusBarVisibility(_loader, _loader.State);
-            if (_loadingStatusBar.Visibility != desiredVisibility)
+            if (_loadingStatusBarBrowse.Visibility != desiredVisibility)
             {
-                _loadingStatusBar.Visibility = desiredVisibility;
+                _loadingStatusBarBrowse.Visibility = desiredVisibility;
             }
         }
 
-        private void _loadingStatusBar_DismissClick(object sender, RoutedEventArgs e)
+        private void _loadingStatusBarBrowse_DismissClick(object sender, RoutedEventArgs e)
         {
-            _loadingStatusBar.Visibility = Visibility.Hidden;
+            _loadingStatusBarBrowse.Visibility = Visibility.Hidden;
         }
 
         public void ResetLoadingStatusIndicator()

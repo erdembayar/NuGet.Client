@@ -284,7 +284,7 @@
             BorderBrush="{TemplateBinding BorderBrush}"
             BorderThickness="{TemplateBinding BorderThickness}"
             Background="{TemplateBinding Background}"
-            Padding="1"
+            Padding="0"
             SnapsToDevicePixels="true"
             Visibility="{TemplateBinding Visibility}">
               <ScrollViewer
@@ -348,12 +348,14 @@
       DockPanel.Dock="Top"
       Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
       Height="22">
-      <nuget:LoadingStatusBar 
-        x:Name="_loadingStatusBar"
-        ShowMoreResultsClick="_loadingStatusBar_ShowMoreResultsClick"
-        DismissClick="_loadingStatusBar_DismissClick"
+      <Grid Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <nuget:LoadingStatusBar
+        x:Name="_loadingStatusBarBrowse"
+        ShowMoreResultsClick="_loadingStatusBarBrowse_ShowMoreResultsClick"
+        DismissClick="_loadingStatusBarBrowse_DismissClick"
         Style="{StaticResource FadeAnimationStyle}"
         Visibility="Hidden"/>
+      </Grid>
       <!--
         Special TextBlock to report loading status to assistive technologies (narrator).
         Code behind changes to the Text property will trigger a narrator event.
