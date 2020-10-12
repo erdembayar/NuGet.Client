@@ -299,6 +299,16 @@
           </ControlTemplate>
         </Setter.Value>
       </Setter>
+      <Setter Property="DockPanel.Dock" Value="Bottom" />
+      <Setter Property="Background" Value="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}" />
+      <Setter Property="Foreground" Value="{DynamicResource {x:Static nuget:Brushes.UIText}}"/>
+      <Setter Property="ItemContainerStyleSelector" Value="{DynamicResource itemStyleSelector}"/>
+      <Setter Property="VirtualizingPanel.IsVirtualizing" Value="true" />
+      <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+      <Setter Property="VirtualizingPanel.CacheLength" Value="1,2" />
+      <Setter Property="VirtualizingPanel.CacheLengthUnit" Value="Page" />
+      <Setter Property="BorderThickness" Value="0,0,0,0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
   </UserControl.Resources>
   <DockPanel LastChildFill="True">
@@ -361,17 +371,7 @@
       x:Name="_listBrowse"
       Style="{StaticResource ListBoxStyle}"
       AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
-      DockPanel.Dock="Bottom"
       PreviewKeyUp="List_PreviewKeyUp"
-      Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
-      Foreground="{DynamicResource {x:Static nuget:Brushes.UIText}}"
-      ItemContainerStyleSelector="{DynamicResource itemStyleSelector}"
-      VirtualizingPanel.IsVirtualizing="true"
-      VirtualizingPanel.VirtualizationMode="Recycling"
-      VirtualizingPanel.CacheLength="1,2"
-      VirtualizingPanel.CacheLengthUnit="Page"
-      BorderThickness="0,0,0,0"
-      HorizontalContentAlignment="Stretch"
       SelectionChanged="List_SelectionChanged"
       Loaded="List_Loaded"
       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -381,21 +381,10 @@
       x:Name="_listInstalled"
       Style="{StaticResource ListBoxStyle}"
       AutomationProperties.Name="{x:Static nuget:Resources.Accessibility_Packages}"
-      DockPanel.Dock="Bottom"
       PreviewKeyUp="List_PreviewKeyUp"
-      Background="{DynamicResource {x:Static nuget:Brushes.ListPaneBackground}}"
-      Foreground="{DynamicResource {x:Static nuget:Brushes.UIText}}"
-      ItemContainerStyleSelector="{DynamicResource itemStyleSelector}"
-      VirtualizingPanel.IsVirtualizing="true"
-      VirtualizingPanel.VirtualizationMode="Recycling"
-      VirtualizingPanel.CacheLength="1,2"
-      VirtualizingPanel.CacheLengthUnit="Page"
-      BorderThickness="0,0,0,0"
-      HorizontalContentAlignment="Stretch"
       SelectionChanged="List_SelectionChanged"
       Loaded="List_Loaded"
       Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type nuget:InfiniteScrollList}}, Path=IsBrowseTab, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
       ItemsSource="{Binding ItemsInstalled}" />
-
   </DockPanel>
 </UserControl>
