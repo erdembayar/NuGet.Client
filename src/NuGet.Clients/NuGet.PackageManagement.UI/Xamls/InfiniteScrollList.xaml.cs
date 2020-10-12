@@ -32,7 +32,6 @@ namespace NuGet.PackageManagement.UI
     public partial class InfiniteScrollList : UserControl
     {
         private readonly LoadingStatusIndicator _loadingStatusIndicator = new LoadingStatusIndicator();
-        private ScrollViewer _scrollViewer;
 
         public event SelectionChangedEventHandler SelectionChanged;
 
@@ -705,38 +704,21 @@ namespace NuGet.PackageManagement.UI
             }
         }
 
-        private void List_Loaded(object sender, RoutedEventArgs e)
+        private void BrowseScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            CurrentlyShownListBox.Loaded -= List_Loaded;
-
-            var c = VisualTreeHelper.GetChildrenCount(CurrentlyShownListBox) > 0 ? VisualTreeHelper.GetChild(CurrentlyShownListBox, 0) as Border : null;
-            if (c == null)
+            if (_loader?.State.LoadingStatus == LoadingStatus.Ready && e.VerticalChange > 0)
             {
-                return;
-            }
-
-            c.Padding = new Thickness(0);
-            _scrollViewer = VisualTreeHelper.GetChild(c, 0) as ScrollViewer;
-            if (_scrollViewer == null)
-            {
-                return;
-            }
-
-            _scrollViewer.Padding = new Thickness(0);
-            _scrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
-        }
-
-        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            if (_loader?.State.LoadingStatus == LoadingStatus.Ready)
-            {
-                var first = _scrollViewer.VerticalOffset;
-                var last = _scrollViewer.ViewportHeight + first;
-                if (_scrollViewer.ViewportHeight > 0 && last >= CurrentlyShownItems.Count)
+                var scrollViewer = e.OriginalSource as ScrollViewer;
+                if (scrollViewer != null)
                 {
-                    NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
-                        LoadItemsAsync(CurrentlyShownListBox, CurrentlyShownItems, selectedPackageItem: null, token: CancellationToken.None)
-                    );
+                    var first = scrollViewer.VerticalOffset;
+                    var last = scrollViewer.ViewportHeight + first;
+                    if (scrollViewer.ViewportHeight > 0 && last >= ItemsBrowse.Count)
+                    {
+                        NuGetUIThreadHelper.JoinableTaskFactory.RunAsync(() =>
+                            LoadItemsAsync(CurrentlyShownListBox, CurrentlyShownItems, selectedPackageItem: null, token: CancellationToken.None)
+                        );
+                    }
                 }
             }
         }
